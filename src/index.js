@@ -1,32 +1,15 @@
 /** @jsxRuntime classic */
-import React from 'react';
-import ReactDOM from 'react-dom';
-import Didact from './lib';
-
-// const element = <h1 title="foo">Hello</h1>
-// const element = React.createElement(
-  // "div",
-  // {id: "foo"},
-  // React.createElement('a', null, 'bar'),
-  // React.createElement('b', null, 'dld')
-// )
 /** @jsx Didact.createElement */
-// const element = (
-  // <div id='foo'>
-    {/* <a>bar</a> */}
-    {/* <b /> */}
-  {/* </div> */}
-// )
-const element = Didact.createElement(
-  "div",
-  {id: "foo"},
-  Didact.createElement('a', null, 'bar'),
-  Didact.createElement('b', null, 'dld')
+import Didact from './lib/Didact';
+
+const element = (
+  <div id='foo'>
+    <a>bar</a>
+    <b />
+  </div>
 )
 const containor = document.getElementById("root")
-ReactDOM.render(element, containor)
-
-
+Didact.render(element, containor)
 
 // const element = {
 //   type: 'h1',
