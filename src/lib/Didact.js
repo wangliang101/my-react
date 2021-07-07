@@ -36,4 +36,22 @@ function render(element, container) {
   container.appendChild(dom)
 }
 
+let nextUnitofWork = null
+
+function workLoop(deadline){
+  let shoudYield = false
+  while(nextUnitofWork && !shoudYield){
+    nextUnitofWork = performUnitOfWork(
+      nextUnitofWork
+    )
+    shoudYield = deadline.timeRemaining() < 1
+  }
+  window.requesIdleCallback(workLoop)
+}
+
+window.requesIdleCallback(workLoop)
+function performUnitOfWork(nextUnitofWork){
+  // TODO
+}
+
 export default { createElement, render };
