@@ -37,17 +37,22 @@ function createDom(fiber){
     // container.appendChild(dom)
 }
 
+function commitRoot(){
+  // TODO add nodex to dom
+}
+
 function render(element, container) {
-  nextUnitofWork = {
+  wipRoot = {
     dom: container,
     props: {
       children: [element],
     }
   }
-
+  nextUnitofWork = wipRoot
 }
 
-let nextUnitofWork = null
+let nextUnitofWork = null;
+let wipRoot = null;
 
 function workLoop(deadline){
   let shoudYield = false
@@ -57,18 +62,23 @@ function workLoop(deadline){
     )
     shoudYield = deadline.timeRemaining() < 1
   }
+  if(!nextUnitofWork && wipRoot){
+    commitRoot()
+  }
   window.requesIdleCallback(workLoop)
 }
 
 window.requesIdleCallback(workLoop)
+
 function performUnitOfWork(fiber){
   // add dom node
   if(!fiber.dom){
     fiber.dom = createDom(fiber)
   }
-  if(fiber.parent){
-    fiber.parent.dom.appendChild(fiber.dom)
-  }
+  // incomplete UI reomve it
+  // if(fiber.parent){
+  //   fiber.parent.dom.appendChild(fiber.dom)
+  // }
   // create new fibers
   const elements = fiber.props.children
   let index = 0;
