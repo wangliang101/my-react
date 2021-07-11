@@ -39,6 +39,19 @@ function createDom(fiber){
 
 function commitRoot(){
   // TODO add nodex to dom
+  commitWork(wipRoot.child)
+  currentRoot = wipRoot
+  wipRoot = null;
+}
+
+function commitWork(fiber){
+  if(!fiber.child){
+    return;
+  }
+  const domParent = fiber.parent.dom;
+  domParent.appendChild(fiber.dom);
+  commitWork(fiber.child)
+  commitWork(fiber.sibling)
 }
 
 function render(element, container) {
@@ -52,6 +65,7 @@ function render(element, container) {
 }
 
 let nextUnitofWork = null;
+let currentRoot = null;
 let wipRoot = null;
 
 function workLoop(deadline){
@@ -75,31 +89,11 @@ function performUnitOfWork(fiber){
   if(!fiber.dom){
     fiber.dom = createDom(fiber)
   }
-  // incomplete UI reomve it
-  // if(fiber.parent){
-  //   fiber.parent.dom.appendChild(fiber.dom)
-  // }
+
   // create new fibers
   const elements = fiber.props.children
-  let index = 0;
-  let prevSibling = null;
-  while(index < elements.length){
-    const element = elements[index]
-    const newFiber = {
-      type: element.type,
-      props: element.props,
-      parent: fiber,
-      dom: null
-    }
-    if(index === 0){
-      fiber.child = newFiber 
-    }else{
-      prevSibling.sibling = newFiber
-    }
+  reconcileChildren(fiber, elements)
 
-    prevSibling = newFiber
-    index++
-  }
   // return next unit of work
   if(fiber.child){
     return fiber.child
@@ -111,6 +105,45 @@ function performUnitOfWork(fiber){
     }
     nextFiber = nextFiber.parent
   }
+}
+
+function reconcileChildren(fiber, elements){
+
+    let index = 0;
+    let wipFiber
+    const oldFiber = wipFiber.alternate && wipFiber.alternate.child;
+
+    let prevSibling = null;
+
+    while(index < elements.length && oldFiber != null){
+      const element = elements[index]
+      let newFiber = null
+      // TODO compare oldFiber to element
+      const sameType = oldFiber && element && element.type === oldFiber.type;
+      if(sameType){
+        // TODO update the node
+      }
+      if(element && !sameType){
+        // TODO add this.type
+      }
+      if(oldFiber && !sameType){
+        // TODO delete the oldFIber's node
+      }
+      // const newFiber = {
+      //   type: element.type,
+      //   props: element.props,
+      //   parent: fiber,
+      //   dom: null
+      // }
+      if(index === 0){
+        fiber.child = newFiber 
+      }else{
+        prevSibling.sibling = newFiber
+      }
+  
+      prevSibling = newFiber
+      index++
+    }
 }
 
 export default { createElement, render };
