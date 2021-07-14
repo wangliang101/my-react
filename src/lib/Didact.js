@@ -122,7 +122,7 @@ function render(element, container) {
 let nextUnitofWork = null;
 let currentRoot = null;
 let wipRoot = null;
-let wipFiber = null;
+// let wipFiber = null;
 let deletions = null;
 
 function workLoop(deadline){
@@ -136,10 +136,10 @@ function workLoop(deadline){
   if(!nextUnitofWork && wipRoot){
     commitRoot()
   }
-  window.requesIdleCallback(workLoop)
+  window.requestIdleCallback(workLoop)
 }
 
-window.requesIdleCallback(workLoop)
+window.requestIdleCallback(workLoop)
 
 function performUnitOfWork(fiber){
   const isFunctionComponent = fiber.type instanceof Function
@@ -161,10 +161,44 @@ function performUnitOfWork(fiber){
   }
 }
 
+let wipFiber = null
+let hookIndex = null
 
 function updateFunctionComponent(fiber){
+  wipFiber = fiber
+  hookIndex = 0
+  wipFiber.hooks = []
   const children = [fiber.type(fiber.props)]
   reconcileChildren(fiber, children)
+}
+
+
+function useState(initial){
+  const oldHook = wipFiber.alternate && wipFiber.alternate.hooks && wipFiber.alternate.hooks[hookIndex]
+  // if have old hook, copy state to new stete
+  const hook = {
+    state: oldHook ? oldHook.state : initial,
+    queue: []
+  }
+  // use actions to update hook.state
+  const actions = oldHook ? oldHook.queue : []
+  actions.forEach(action => {
+    hook.state = actions(hook.state)
+  })
+
+  const setState = action => {
+    hook.queue.push(action)
+    wipRoot = {
+      dom: currentRoot.dom,
+      props: currentRoot.props,
+      alternate: currentRoot
+    }
+    nextUnitofWork = wipRoot
+    deletions = []
+  }
+  wipFiber.hooks.push(hook)
+  hookIndex++
+  return[hook.state, setState]
 }
 
 function updatedHostComponent(fiber) {
@@ -230,4 +264,4 @@ function reconcileChildren(fiber, elements){
   }
 }
 
-export default { createElement, render };
+export default { createElement, render, useState };
