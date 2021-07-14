@@ -81,7 +81,7 @@ function commitRoot(){
 }
 
 function commitWork(fiber){
-  if(!fiber.child){
+  if(!fiber){
     return;
   }
   const domParentFiber = fiber.parent;
@@ -210,7 +210,7 @@ function updatedHostComponent(fiber) {
   const elements = fiber.props.children
   reconcileChildren(fiber, elements)
 }
-function reconcileChildren(fiber, elements){
+function reconcileChildren(wipFiber, elements){
   let index = 0;
   const oldFiber = wipFiber.alternate && wipFiber.alternate.child;
   let prevSibling = null;
@@ -247,14 +247,12 @@ function reconcileChildren(fiber, elements){
       deletions.push(oldFiber)
       
     }
-    // const newFiber = {
-    //   type: element.type,
-    //   props: element.props,
-    //   parent: fiber,
-    //   dom: null
-    // }
+    if(oldFiber){
+      oldFiber = oldFiber.sibling
+    }
+
     if(index === 0){
-      fiber.child = newFiber 
+      wipFiber.child = newFiber 
     }else{
       prevSibling.sibling = newFiber
     }
