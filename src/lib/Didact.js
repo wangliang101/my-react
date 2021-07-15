@@ -26,9 +26,10 @@ function createDom(fiber){
     // 如果是text elements,创建text node,否则创建一个regular node
     const dom = fiber.type === "TEXT_ELEMENT" ? document.createTextNode("") : document.createElement(fiber.type)
     // assign the element props to the node
-    Object.keys(fiber.props).filter(key => key !== "children").forEach(name => {
-      dom[name] = fiber.props[name]
-    })
+    updateDom(dom, {}, fiber.props)
+    // Object.keys(fiber.props).filter(key => key !== "children").forEach(name => {
+    //   dom[name] = fiber.props[name]
+    // })
     return dom;
     // // 递归创建子元素
     // element.props.children.forEach(child => {
@@ -73,7 +74,7 @@ function updateDom(dom, prevProps, nextProps){
 }
 
 function commitRoot(){
-  // TODO add nodex to dom
+  // TODO add node to dom
   deletions.forEach(commitWork)
   commitWork(wipRoot.child)
   currentRoot = wipRoot
@@ -84,7 +85,7 @@ function commitWork(fiber){
   if(!fiber){
     return;
   }
-  const domParentFiber = fiber.parent;
+  let domParentFiber = fiber.parent;
   while(!domParentFiber.dom){
     domParentFiber = domParentFiber.parent
   }
@@ -100,11 +101,11 @@ function commitWork(fiber){
   commitWork(fiber.sibling)
 }
 
-function commitDeletion(fiber, domparent){
+function commitDeletion(fiber, domParent){
   if(fiber.dom){
-    domparent.removeChild(fiber.dom)
+    domParent.removeChild(fiber.dom)
   }else{
-    commitDeletion(fiber.child, domparent)
+    commitDeletion(fiber.child, domParent)
   }
 }
 
@@ -113,7 +114,8 @@ function render(element, container) {
     dom: container,
     props: {
       children: [element],
-    }
+    },
+    alternate: currentRoot,
   }
   deletions = []
   nextUnitofWork = wipRoot
@@ -136,10 +138,10 @@ function workLoop(deadline){
   if(!nextUnitofWork && wipRoot){
     commitRoot()
   }
-  window.requestIdleCallback(workLoop)
+  requestIdleCallback(workLoop)
 }
 
-window.requestIdleCallback(workLoop)
+requestIdleCallback(workLoop)
 
 function performUnitOfWork(fiber){
   const isFunctionComponent = fiber.type instanceof Function
@@ -183,7 +185,7 @@ function useState(initial){
   // use actions to update hook.state
   const actions = oldHook ? oldHook.queue : []
   actions.forEach(action => {
-    hook.state = actions(hook.state)
+    hook.state = action(hook.state)
   })
 
   const setState = action => {
@@ -212,13 +214,14 @@ function updatedHostComponent(fiber) {
 }
 function reconcileChildren(wipFiber, elements){
   let index = 0;
-  const oldFiber = wipFiber.alternate && wipFiber.alternate.child;
+  let oldFiber = wipFiber.alternate && wipFiber.alternate.child;
   let prevSibling = null;
-  while(index < elements.length && oldFiber != null){
+
+  while(index < elements.length || oldFiber != null){
     const element = elements[index]
     let newFiber = null
     // TODO compare oldFiber to element
-    const sameType = oldFiber && element && element.type === oldFiber.type;
+    const sameType = oldFiber && element && element.type == oldFiber.type;
     if(sameType){
       // TODO update the node
       newFiber = {
@@ -253,7 +256,7 @@ function reconcileChildren(wipFiber, elements){
 
     if(index === 0){
       wipFiber.child = newFiber 
-    }else{
+    }else if(element){
       prevSibling.sibling = newFiber
     }
 
